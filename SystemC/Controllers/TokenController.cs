@@ -1,29 +1,27 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SystemA.Models;
-using SystemA.Services;
+using SystemC.Models;
+using SystemC.Services;
 
-namespace SystemA.Controllers;
+namespace SystemC.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class TokenController : ControllerBase
 {
     private readonly TokenService _tokenService;
-    private readonly SignatureService _signatureService;
     private readonly ILogger<TokenController> _logger;
 
-    public TokenController(TokenService tokenService, SignatureService signatureService, ILogger<TokenController> logger)
+    public TokenController(TokenService tokenService, ILogger<TokenController> logger)
     {
         _tokenService = tokenService;
-        _signatureService = signatureService;
         _logger = logger;
     }
 
     [HttpPost("generate")]
     public IActionResult GenerateToken()
     {
-        var token = _tokenService.GenerateToken("user123", "SystemA");
+        var token = _tokenService.GenerateToken("user123", "SystemC");
         return Ok(new { token });
     }
 
@@ -31,18 +29,13 @@ public class TokenController : ControllerBase
     [AllowAnonymous]
     public IActionResult ExchangeToken([FromBody] TokenExchangeRequest request)
     {
-        if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.SystemId) || string.IsNullOrEmpty(request.Signature))
+        if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.SystemId))
         {
-            return BadRequest("Token, SystemId, and Signature are required");
+            return BadRequest("Token and SystemId are required");
         }
 
-        // 验证签名
-        if (!_signatureService.VerifySignature(request.Token, request.SystemId, request.Signature))
-        {
-            _logger.LogWarning("无效的签名或不被信任的系统: {SystemId}", request.SystemId);
-            return Unauthorized("Invalid signature or untrusted system");
-        }
-
+        // SystemC没有实现签名验证，直接尝试交换令牌
+        
         // 验证传入的令牌，但不验证颁发者和接收者
         if (!_tokenService.ValidateExternalToken(request.Token, out var claimsPrincipal))
         {
@@ -58,8 +51,8 @@ public class TokenController : ControllerBase
         }
 
         // 生成新的令牌
-        var newToken = _tokenService.GenerateToken(userId, "SystemA");
+        var newToken = _tokenService.GenerateToken(userId, "SystemC");
 
         return Ok(new { token = newToken });
     }
-}
+} 

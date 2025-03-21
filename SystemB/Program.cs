@@ -28,6 +28,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Register TokenService
 builder.Services.AddScoped<TokenService>();
 
+// Register SignatureService
+builder.Services.AddScoped<SignatureService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

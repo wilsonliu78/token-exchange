@@ -1,0 +1,6 @@
+@SystemC_HostAddress = http://localhost:5273
+
+GET {{SystemC_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
