@@ -8,6 +8,7 @@ class Program
         Console.WriteLine("开始令牌交换测试...\n");
 
         var httpClient = new HttpClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(30);
 
         try
         {
@@ -21,10 +22,10 @@ class Program
 
             // 2. 获取对SystemB的签名
             Console.WriteLine("2. 从 System A 获取对 System B 的签名...");
-            var signatureRequestA = new TokenExchangeRequest
+            var signatureRequestA = new
             {
                 Token = tokenFromA,
-                SystemId = "SystemB"
+                SystemId = "SystemA"
             };
             
             var signatureResponseA = await httpClient.PostAsJsonAsync("http://localhost:5001/api/signature/generate", signatureRequestA);
@@ -35,10 +36,12 @@ class Program
 
             // 3. 使用 System A 的令牌向 System B 请求交换（带签名）
             Console.WriteLine("3. 将 System A 的令牌交换为 System B 的令牌（带签名）...");
-            var exchangeRequestB = new TokenExchangeRequest
+            
+            // 这里的SystemId是告诉SystemB这个令牌来自哪个系统
+            var exchangeRequestB = new
             {
                 Token = tokenFromA,
-                SystemId = "SystemA",
+                SystemId = "SystemA",  // 表明令牌来自SystemA
                 Signature = signatureForB
             };
             
@@ -52,10 +55,10 @@ class Program
 
             // 4. 从SystemB获取对SystemA的签名
             Console.WriteLine("4. 从 System B 获取对 System A 的签名...");
-            var signatureRequestB = new TokenExchangeRequest
+            var signatureRequestB = new
             {
                 Token = tokenFromB,
-                SystemId = "SystemA"
+                SystemId = "SystemB"  // 修改为SystemB，因为这是生成签名的系统
             };
             
             var signatureResponseB = await httpClient.PostAsJsonAsync("http://localhost:5002/api/signature/generate", signatureRequestB);
@@ -66,10 +69,10 @@ class Program
 
             // 5. 使用 System B 的令牌向 System A 请求交换（带签名）
             Console.WriteLine("5. 将 System B 的令牌交换回 System A 的令牌（带签名）...");
-            var exchangeRequestA = new TokenExchangeRequest
+            var exchangeRequestA = new
             {
                 Token = tokenFromB,
-                SystemId = "SystemB",
+                SystemId = "SystemB",  // 表明令牌来自SystemB
                 Signature = signatureForA
             };
             
@@ -89,11 +92,12 @@ class Program
 
             // 7. 使用 System C 的令牌向 System A 请求交换（没有签名）
             Console.WriteLine("7. 尝试将 System C 的令牌交换到 System A（无签名，预期失败）...");
-            var exchangeRequestCToA = new TokenExchangeRequest
+            var exchangeRequestCToA = new
             {
                 Token = tokenFromC,
-                SystemId = "SystemC"
+                SystemId = "SystemC",
                 // 没有提供签名
+                Signature = ""  // 明确设置为空字符串
             };
             
             try 
@@ -131,12 +135,5 @@ public class TokenResponse
 
 public class SignatureResponse
 {
-    public string Signature { get; set; } = string.Empty;
-}
-
-public class TokenExchangeRequest
-{
-    public string Token { get; set; } = string.Empty;
-    public string SystemId { get; set; } = string.Empty;
     public string Signature { get; set; } = string.Empty;
 }
